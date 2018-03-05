@@ -2,7 +2,6 @@
 state
 node_modules
 /build
-docker-compose.yml
 .gradle
 .idea
 config/internal.yml
