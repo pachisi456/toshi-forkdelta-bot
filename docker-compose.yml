@@ -7,7 +7,7 @@ services:
       - postgres
     environment: &environment
       - TOKEN_APP_SEED=meadow second valid tribe party holiday garbage comfort can shuffle roast tip
-      - TOKEN_APP_USERNAME=0xbtcPriceTracker
+      - TOKEN_APP_USERNAME=PriceTracker0xbtc
       - TOKEN_APP_NAME=0xbtc Price Tracker
       - TOKEN_APP_AVATAR=
       - REDIS_URL=redis://h:rlcMWNrxXgqS0xM8aWCYuE0R@redis:6379

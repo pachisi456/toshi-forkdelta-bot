@@ -1,8 +1,10 @@
 const Bot = require('./lib/Bot')
 const SOFA = require('sofa-js')
 const Fiat = require('./lib/Fiat')
+const fetch = require('node-fetch');
 
 let bot = new Bot()
+let trackerRunning = false;
 
 // ROUTING
 
@@ -10,7 +12,6 @@ bot.onEvent = function(session, message) {
   switch (message.type) {
     case 'Init':
       welcome(session);
-      startTracker();
       break
     case 'Message':
       onMessage(session, message)
@@ -27,11 +28,30 @@ bot.onEvent = function(session, message) {
   }
 }
 
-function startTracker() {
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", "https://api.forkdelta.com/returnTicker");
-    xhr.send();
-    console.log(xhr.response);
+function startTracker(session) {
+    if (trackerRunning === true) {
+        sendMessage(session, '0xbitcoin price tracker is running...');
+        return;
+    }
+    trackerRunning = true;
+    setInterval(() => {
+        sendMessage(session, '0xbitcoin price tracker started.');
+        let bid = 0;
+        fetch('https://api.forkdelta.com/returnTicker')
+            .then(response => {
+                response.json().then(json => {
+                    console.log(json.ETH_0xb6ed764);
+                    bid = json.ETH_0xb6ed764.bid;
+                    if (bid >= 0.00095) {
+                        priceNotification(session, bid);
+                    }
+                });
+            });
+    }, 420000);
+}
+
+function priceNotification(session, price) {
+    sendMessage(session, 'Price of 0xbitcoin is ' + price + '!!!');
 }
 
 function onMessage(session, message) {
@@ -41,6 +61,7 @@ function onMessage(session, message) {
 function onCommand(session, command) {
   switch (command.content.value) {
     case 'ping':
+      startTracker(session);
       pong(session)
       break
     case 'count':
