@@ -31,23 +31,23 @@ bot.onEvent = function(session, message) {
 function startTracker(session) {
     if (trackerRunning === true) {
         sendMessage(session, '0xbitcoin price tracker is running...');
-        return;
-    }
-    trackerRunning = true;
-    setInterval(() => {
-        sendMessage(session, '0xbitcoin price tracker started.');
-        let bid = 0;
-        fetch('https://api.forkdelta.com/returnTicker')
-            .then(response => {
-                response.json().then(json => {
-                    console.log(json.ETH_0xb6ed764);
-                    bid = json.ETH_0xb6ed764.bid;
-                    if (bid >= 0.00095) {
-                        priceNotification(session, bid);
-                    }
+    } else {
+        trackerRunning = true;
+        setInterval(() => {
+            sendMessage(session, '0xbitcoin price tracker started.');
+            let bid = 0;
+            fetch('https://api.forkdelta.com/returnTicker')
+                .then(response => {
+                    response.json().then(json => {
+                        console.log(json.ETH_0xb6ed764);
+                        bid = json.ETH_0xb6ed764.bid;
+                        if (bid >= 0.00095) {
+                            priceNotification(session, bid);
+                        }
+                    });
                 });
-            });
-    }, 420000);
+        }, 420000);
+    }
 }
 
 function priceNotification(session, price) {
