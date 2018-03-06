@@ -33,8 +33,8 @@ function startTracker(session) {
         sendMessage(session, '0xbitcoin price tracker is running...');
     } else {
         trackerRunning = true;
+        sendMessage(session, '0xbitcoin price tracker started.');
         setInterval(() => {
-            sendMessage(session, '0xbitcoin price tracker started.');
             let bid = 0;
             fetch('https://api.forkdelta.com/returnTicker')
                 .then(response => {
