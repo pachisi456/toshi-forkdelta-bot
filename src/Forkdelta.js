@@ -42,6 +42,7 @@ class Forkdelta {
                     this.tradeData = json;
                 });
             });
+        //TODO fire off alerts
     }
 
     /**

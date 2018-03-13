@@ -31,15 +31,28 @@ bot.onEvent = function(session, message) {
 
 function onCommand(session, command) {
     switch (command.content.value) {
-        case 'back':
+        case 'cancel':
             sendMessage(session, 'How can I help you?');
             break;
         case 'getPrice':
-            getPrice(session, 'What token do you want to know the price of? Please send me the official' +
-                ' symbol.');
+            sendMessage(session, 'What token do you want to know the price of? Please send me the official symbol.');
             break;
-        case 'setAlarm':
-            setAlarm(session, 'This feature will be implemented shortly!');
+        case 'setAlert':
+            setAlert(session, 'What token do you want to set an alert for? Please send me the official symbol.');
+            break;
+        case 'bid':
+            session.set('priceTypeToSetAlertFor', 'bid');
+            let tokenHandle = session.get('tokenToSetAlertFor');
+            setAlertPrice(session, 'Okay, so you want to set an alert for the bid price of ' + tokenHandle + '. ' +
+                'Please finally provide a price in ETH. If the bid price on ForkDelta drops below this price I will ' +
+                'let you know.');
+            break;
+        case 'ask':
+            session.set('priceTypeToSetAlertFor', 'ask');
+            let tokenHandle = session.get('tokenToSetAlertFor');
+            setAlertPrice(session, 'Okay, so you want to set an alert for the ask price of ' + tokenHandle + '. ' +
+                'Please finally provide a price in ETH. If the bid price on ForkDelta rises above this price I will ' +
+                'let you know.');
             break;
         case 'info':
             welcome(session);
@@ -58,14 +71,38 @@ function onCommand(session, command) {
 
 async function onMessage(session, message) {
     switch (session.get('step')) {
-        /*case 'start':
-            sendMessage(session, 'How can I help you?');
-            break;*/
-        default:
-            // make message body all caps and translate the symbol to the traded token handle:
+        case 'setAlert':
+            // translate the case-insensitive user input to first to a case-sensitive symbol and then to the human
+            // readable handle
             let symbol = forkdelta.lookupSymbol(message.body);
             let handle = forkdelta.getTokenHandleBySymbol(symbol);
-            // if handle was found give back prices:
+            // check if handle was found and thus is traded on forkdelta
+            if (handle != null) {
+                session.set('tokenToSetAlertFor', handle); // save the token handle for later reference
+                setAlertPriceType(session, handle);
+            } else {
+                setAlert(session, 'Sorry, I couldn\'t find what you\'re looking for. Please try again.');
+            }
+            break;
+        case 'setAlertPrice':
+            let price = message.body.match(/\d+([.|,]\d+)?/g);
+            if (price != null) {
+                let tokenHandle = session.get('tokenToSetAlertFor');
+                let priceType = session.get('priceTypeToSetAlertFor');
+                //TODO set alert
+
+                sendMessage(session, 'Alert for ' + tokenHandle + ' ' + priceType + ' price successfully set to ' +
+                    price + ' ETH.');
+            } else {
+                setAlertPrice(session, 'Sorry, I didn\'t get that. Please try again.');
+            }
+            break;
+        default:
+            // translate the case-insensitive user input to first to a case-sensitive symbol and then to the human
+            // readable handle
+            let symbol = forkdelta.lookupSymbol(message.body);
+            let handle = forkdelta.getTokenHandleBySymbol(symbol);
+            // check if handle was found and thus is traded on forkdelta
             if (handle != null) {
                 let last = forkdelta.getPrice(handle, 'last');
                 let bid = forkdelta.getPrice(handle, 'bid');
@@ -78,7 +115,7 @@ async function onMessage(session, message) {
                     'bid: ' + bid + ' ETH ($' + bidUSD.toFixed(2) + ')\n' +
                     'ask: ' + ask + ' ETH ($' + askUSD.toFixed(2) + ')');
             } else {
-                getPrice(session, 'Sorry, I couldn\'t find what you\'re looking for. Please try again.');
+                sendMessage(session, 'Sorry, I couldn\'t find what you\'re looking for. Please try again.');
             }
             break;
         /*default:
@@ -114,25 +151,25 @@ function onPayment(session, message) {
 function welcome(session) {
     sendMessage(session, 'Hi there! I\'m a bot that utilizes the API of ForkDelta, a decentralized Ethereum Token ' +
         'Exchange with the most ERC20 listings of any exchange. You can ask me for prices traded on ForkDelta ' +
-        'and set price alarms.');
+        'and set price alerts.');
 }
 
 /**
- * notify user about set alarm
+ * notify user about set alert
  * @param session user session to send message to
  * @param symbol of token (e.g. 'REP')
  * @param priceType type of price ('last', 'bid' or 'ask')
  * @param price of that token
  */
 function priceNotification(session, symbol, priceType, price) {
-    sendMessage(session, 'Price Alarm! ' + priceType + ' price of ' + symbol + ' is ' + price + '.');
+    sendMessage(session, 'Price Alert! ' + priceType + ' price of ' + symbol + ' is ' + price + '.');
 }
 
 function sendMessage(session, message) {
     session.set('step', 'start');
     let controls = [
         {type: 'button', label: 'Get a price', value: 'getPrice'},
-        {type: 'button', label: 'Set an alarm', value: 'setAlarm'},
+        {type: 'button', label: 'Set an alert', value: 'setAlert'},
         {type: 'group', label: 'More', controls: [
                 {type: 'button', label: 'Info', value: 'info'},
                 {type: 'button', label: 'Contribute', value: 'contribute'},
@@ -146,23 +183,34 @@ function sendMessage(session, message) {
     }));
 }
 
-function getPrice(session, message) {
-    session.set('step', 'getPrice');
+function setAlert(session, message) {
+    session.set('step', 'setAlert');
     session.reply(SOFA.Message({
         body: message,
         controls: [
-            {type: 'button', label: 'back', value: 'back'}
+            {type: 'button', label: 'cancel', value: 'cancel'}
         ],
         showKeyboard: true
     }));
 }
 
-function setAlarm(session, message) {
-    session.set('step', 'setAlarm');
+function setAlertPriceType(session, tokenHandle) {
+    session.reply(SOFA.Message({
+        body: 'What price of ' + tokenHandle + ' do you want to set an alert for, bid or ask?',
+        controls: [
+            {type: 'button', label: 'bid', value: 'bid'},
+            {type: 'button', label: 'ask', value: 'ask'}
+        ],
+        showKeyboard: true
+    }));
+}
+
+function setAlertPrice(session, message) {
+    session.set('step', 'setAlertPrice');
     session.reply(SOFA.Message({
         body: message,
         controls: [
-            {type: 'button', label: 'back', value: 'back'}
+            {type: 'button', label: 'cancel', value: 'cancel'}
         ],
         showKeyboard: true
     }));
