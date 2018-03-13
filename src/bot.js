@@ -113,7 +113,7 @@ function onPayment(session, message) {
 
 function welcome(session) {
     sendMessage(session, 'Hi there! I\'m a bot that utilizes the API of ForkDelta, a decentralized Ethereum Token ' +
-        'Exchange with the most ERC20 listings of any exchange. You can ask me for prices traded on ForkDelta' +
+        'Exchange with the most ERC20 listings of any exchange. You can ask me for prices traded on ForkDelta ' +
         'and set price alarms.');
 }
 
