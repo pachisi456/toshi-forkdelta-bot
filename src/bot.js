@@ -48,7 +48,7 @@ function onCommand(session, command) {
         case 'contribute':
             sendMessage(session, 'If you want to request or implement a feature feel free to reach out to ' +
                 '@pachisi456. The source code can be found at github.com/pachisi456/toshi-forkdelta-bot. ' +
-                'Pull request with new features will be happily accepted.');
+                'Pull requests with new features will happily be reviewed and accepted.');
             break;
         case 'donate':
             sendMessage(session, 'If you think this work should be rewarded feel free to leave me a small ' +
