@@ -1,7 +1,9 @@
 # Toshi ForkDelta Bot
 
 This is a bot for [Toshi](https://www.toshi.org/) that utilizes
-the API of the decentralized exchange [ForkDelta](https://forkdelta.github.io).
+the API of [ForkDelta](https://forkdelta.github.io), a
+decentralized Ethereum Token Exchange with the most ERC20
+listings of any exchange.
 Prices are currently updated every five minutes. Users can chat
 with ForkDelta Bot to
 * look up prices of tokens traded on ForkDelta
@@ -38,7 +40,8 @@ docker-compose build
 
 To start chatting with the ForkDelta Bot running locally on your
 machine download Toshi Dev for [Android](https://developers.toshi.org/docs/android)
-or [iOS](https://developers.toshi.org/docs/ios)
+or [iOS](https://developers.toshi.org/docs/ios) and search for
+the username you provided in the browse tab.
 
 
 ## See also

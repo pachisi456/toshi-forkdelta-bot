@@ -42,8 +42,7 @@ function onCommand(session, command) {
             setAlarm(session, 'This feature will be implemented shortly!');
             break;
         case 'info':
-            sendMessage(session, 'ForkDelta Bot makes use of the ForkDelta API to enable users to look up ' +
-                'prices traded on ForkDelta and set price alarms.');
+            welcome(session);
             break;
         case 'contribute':
             sendMessage(session, 'If you want to request or implement a feature feel free to reach out to ' +
@@ -52,17 +51,17 @@ function onCommand(session, command) {
             break;
         case 'donate':
             sendMessage(session, 'If you think this work should be rewarded feel free to leave me a small ' +
-                'donation via the PAY button. Thanks a lot!');
+                'donation via the PAY button above. Thanks a lot!');
             break;
     }
 }
 
 async function onMessage(session, message) {
     switch (session.get('step')) {
-        case 'start':
+        /*case 'start':
             sendMessage(session, 'How can I help you?');
-            break;
-        case 'getPrice':
+            break;*/
+        default:
             // make message body all caps and translate the symbol to the traded token handle:
             let symbol = forkdelta.lookupSymbol(message.body);
             let handle = forkdelta.getTokenHandleBySymbol(symbol);
@@ -82,8 +81,8 @@ async function onMessage(session, message) {
                 getPrice(session, 'Sorry, I couldn\'t find what you\'re looking for. Please try again.');
             }
             break;
-        default:
-            welcome(session);
+        /*default:
+            welcome(session);*/
     }
 }
 
@@ -113,8 +112,9 @@ function onPayment(session, message) {
 // MESSAGES AND USER INTERACTION:
 
 function welcome(session) {
-    sendMessage(session, `Hey there! This is ForkDelta Bot. You can look up prices traded on ForkDelta ` +
-        'or set price alarms.');
+    sendMessage(session, 'Hi there! I\'m a bot that utilizes the API of ForkDelta, a decentralized Ethereum Token ' +
+        'Exchange with the most ERC20 listings of any exchange. You can ask me for prices traded on ForkDelta' +
+        'and set price alarms.');
 }
 
 /**
