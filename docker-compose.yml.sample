@@ -6,9 +6,9 @@ services:
       - redis
       - postgres
     environment: &environment
-      - TOKEN_APP_SEED=resource coin tunnel cabbage jump moment belt nation alley borrow sick wash
-      - TOKEN_APP_USERNAME=ForkDelta_Bot
-      - TOKEN_APP_NAME=ForkDelta Bot
+      - TOKEN_APP_SEED=
+      - TOKEN_APP_USERNAME=
+      - TOKEN_APP_NAME=
       - TOKEN_APP_AVATAR=
       - REDIS_URL=redis://h:rlcMWNrxXgqS0xM8aWCYuE0R@redis:6379
       - DATABASE_URL=postgres://token:va5uOdJBqu2dZ1@postgres:5432/token
