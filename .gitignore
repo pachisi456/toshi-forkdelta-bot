@@ -7,3 +7,4 @@ node_modules
 config/internal.yml
 src/sample-data.json
 docker-compose.yml
+package-lock.json
