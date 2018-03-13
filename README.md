@@ -1,8 +1,11 @@
 # Toshi ForkDelta Bot
 
-This is a bot for [Toshi](https://www.toshi.org/) that enables
-users to check prices of tokens traded on Toshi and set price
-alarms.
+This is a bot for [Toshi](https://www.toshi.org/) that utilizes
+the API of the decentralized exchange [ForkDelta](https://forkdelta.github.io).
+Prices are currently updated every five minutes. Users can chat
+with ForkDelta Bot to
+* look up prices of tokens traded on ForkDelta
+* set price alarms
 
 If you want to add a new feature feel free to make a pull request.
 I will happily review and accept it.
@@ -42,3 +45,4 @@ or [iOS](https://developers.toshi.org/docs/ios)
 
 * [Toshi](https://www.toshi.org)
 * [Toshi Documentation](https://developers.toshi.org/docs)
+* [ForkDelta](https://forkdelta.github.io)
