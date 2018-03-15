@@ -1,5 +1,6 @@
 class PriceAlert {
-    constructor(tokenHandle, priceType, price) {
+    constructor(symbol, tokenHandle, priceType, price) {
+        this.symbol = symbol;
         this.tokenHandle = tokenHandle;
         this.priceType = priceType;
         this.price = price;
