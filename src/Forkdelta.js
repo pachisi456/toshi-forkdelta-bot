@@ -40,9 +40,10 @@ class Forkdelta {
             .then(response => {
                 response.json().then(json => {
                     this.tradeData = json;
-                });
+                }).then((() => {
+                    //TODO fire off alerts);
+                }));
             });
-        //TODO fire off alerts
     }
 
     /**
