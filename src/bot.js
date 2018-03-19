@@ -234,14 +234,11 @@ module.exports.checkAndSendAlerts = async function () {
         // iterate over all alerts of a specific user
         for (let userAlert in userAlerts) {
             // determine whether the alert should be fired off
-            if (userAlerts[userAlert].priceType === 'bid' && userAlerts[userAlert].price >=
-                forkdelta.getPrice(userAlerts[userAlert].tokenHandle, userAlerts[userAlert].priceType)) {
-                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType,
-                        userAlerts[userAlert].price);
-            } else if (userAlerts[userAlert].priceType === 'ask' && userAlerts[userAlert].price <=
-                forkdelta.getPrice(userAlerts[userAlert].tokenHandle, userAlerts[userAlert].priceType)) {
-                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType,
-                    userAlerts[userAlert].price);
+            let price = forkdelta.getPrice(userAlerts[userAlert].tokenHandle, userAlerts[userAlert].priceType);
+            if (userAlerts[userAlert].priceType === 'bid' && userAlerts[userAlert].price <= price) {
+                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType, price);
+            } else if (userAlerts[userAlert].priceType === 'ask' && userAlerts[userAlert].price >= price) {
+                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType, price);
             }
         }
     }
