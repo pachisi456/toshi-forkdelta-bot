@@ -51,7 +51,7 @@ function onCommand(session, command) {
             break;
         case 'alerts':
             let userAlerts = session.getGlobal(session.user.username);
-            if (userAlerts === undefined) {
+            if (userAlerts === undefined || userAlerts.length === 0) {
                 sendMessage(session, 'priceAlerts', 'You currently don\'t have any price alerts set.', false);
             } else {
                 sendMessage(session, 'priceAlerts', 'Here are your alerts:', false);
