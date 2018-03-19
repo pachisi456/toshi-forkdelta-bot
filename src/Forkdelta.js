@@ -1,16 +1,19 @@
 const fetch = require('node-fetch');
+const bot = require('./bot');
 
 class Forkdelta {
     constructor() {
         this.tokens = new Map(); // key: human readable symbol, value: forkdelta handle
-        this.symbolLookup = new Map(); // key: lower case symbol for case-insensitive search, value: case
-        // sensitive symbol
+        this.symbolLookup = new Map(); // key: lower case symbol for case-insensitive search, value: case-sensitive symbol
         this.tradeData = null;
+        this.weeklyPriceCalls = 0;
+        this.totalPriceCalls = 0;
         // get tokens and trade data once and then periodically:
         this.fetchTokenList();
         this.fetchTradeData();
         setInterval(() => {this.fetchTokenList()}, 8640000); // get list of traded tokens every 24 hours
         setInterval(() => {this.fetchTradeData()}, 300000); // get fork delta api data every 5 minutes
+        setInterval(() => {this.weeklyPriceCalls = 0}, 6.048e+8);
     }
 
     /**
@@ -21,7 +24,6 @@ class Forkdelta {
         fetch('https://forkdelta.github.io/config/main.json')
             .then(response => {
                 response.json().then(json => {
-                    //this.tokens = json.tokens;
                     this.tokens = new Map();
                     this.symbolLookup = new Map();
                     json.tokens.forEach((token) => {
@@ -41,7 +43,7 @@ class Forkdelta {
                 response.json().then(json => {
                     this.tradeData = json;
                 }).then((() => {
-                    //TODO fire off alerts);
+                    bot.checkAndSendAlerts();
                 }));
             });
     }

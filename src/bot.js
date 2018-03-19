@@ -1,9 +1,12 @@
 const Bot = require('./lib/Bot');
 const SOFA = require('sofa-js');
 const Fiat = require('./lib/Fiat');
-const IdService = require('./lib/IdService'); //TODO delete this?
+const IdService = require('./lib/IdService');
+const Session = require('./lib/Session');
 const Forkdelta = require('./Forkdelta');
 const PriceAlert = require('./PriceAlert');
+
+const devAddress = '0x13e56587159d9bead068c0439806609b44974d3f'; // pachisi456's token id address for getting bot statistics
 
 let bot = new Bot();
 let forkdelta = new Forkdelta();
@@ -92,7 +95,21 @@ function onCommand(session, command) {
 }
 
 async function onMessage(session, message) {
-    //TODO make sure every step is handled
+    // statistics for the developer
+    if (message.body === 'Stats' && session.address === devAddress) {
+        let alerts = await getAlerts();
+        let numAlerts = 0;
+        for (let alert in alerts) {
+            let userAlerts = alerts[alert];
+            for (let userAlert in userAlerts) {
+                numAlerts++;
+            }
+        }
+        sendMessage(session, session.get('step'), 'Users using alerts: ' + Object.keys(alerts).length + '\nTotal set ' +
+            'alerts: ' + numAlerts + '\nPrice calls this week: ' + forkdelta.weeklyPriceCalls + '\nTotal price ' +
+            'calls: ' + forkdelta.totalPriceCalls, false);
+        return;
+    }
     let symbol;
     let handle;
     switch (session.get('step')) {
@@ -112,7 +129,8 @@ async function onMessage(session, message) {
             break;
         case 'setAlertPrice':
             // verify that user provided a valid price
-            let price = message.body.match(/\d+([.|,]\d+)?/g);
+            let priceArr = message.body.match(/\d+([.|,]\d+)?/g);
+            let price = priceArr[0];
             if (price != null) {
                 // create a new alert:
                 symbol = session.get('tokenToSetAlertFor');
@@ -160,7 +178,8 @@ async function onMessage(session, message) {
             symbol = forkdelta.lookupSymbol(message.body);
             handle = forkdelta.getTokenHandleBySymbol(symbol);
             // check if handle was found and thus is traded on forkdelta
-            if (handle != null) {
+            // also catch request for 'eth' -> this is a weird bug the bot otherwise can't handle
+            if (handle != null && message.body.toLowerCase() !== 'eth') {
                 let last = forkdelta.getPrice(handle, 'last');
                 let bid = forkdelta.getPrice(handle, 'bid');
                 let ask = forkdelta.getPrice(handle, 'ask');
@@ -171,6 +190,8 @@ async function onMessage(session, message) {
                     'last: ' + last + ' ETH ($' + lastUSD.toFixed(2) + ')\n' +
                     'bid: ' + bid + ' ETH ($' + bidUSD.toFixed(2) + ')\n' +
                     'ask: ' + ask + ' ETH ($' + askUSD.toFixed(2) + ')', false);
+                forkdelta.weeklyPriceCalls++;
+                forkdelta.totalPriceCalls++;
             } else {
                 sendMessage(session, session.get('step'), 'Sorry, I couldn\'t find what you\'re looking for. ' +
                     'Please try again.', true);
@@ -201,6 +222,31 @@ function onPayment(session, message) {
     }
 }
 
+/**
+ * called after new list of trading data was fetched
+ * iterates over all set alerts and notifies the according user if a price is over/under the set alert price
+ */
+module.exports.checkAndSendAlerts = async function () {
+    let alerts = await getAlerts();
+    // iterate over all alerts
+    for (let alert in alerts) {
+        let userAlerts = alerts[alert];
+        // iterate over all alerts of a specific user
+        for (let userAlert in userAlerts) {
+            // determine whether the alert should be fired off
+            if (userAlerts[userAlert].priceType === 'bid' && userAlerts[userAlert].price >=
+                forkdelta.getPrice(userAlerts[userAlert].tokenHandle, userAlerts[userAlert].priceType)) {
+                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType,
+                        userAlerts[userAlert].price);
+            } else if (userAlerts[userAlert].priceType === 'ask' && userAlerts[userAlert].price <=
+                forkdelta.getPrice(userAlerts[userAlert].tokenHandle, userAlerts[userAlert].priceType)) {
+                priceNotification(alert, userAlerts[userAlert].symbol, userAlerts[userAlert].priceType,
+                    userAlerts[userAlert].price);
+            }
+        }
+    }
+};
+
 
 // MESSAGES AND USER INTERACTION:
 
@@ -211,16 +257,30 @@ function welcome(session) {
 }
 
 /**
- * notify user about set alert
- * @param session user session to send message to
+ * notify user about a price according to a set alert
+ * @param username user to send message to
  * @param symbol of token (e.g. 'REP')
- * @param priceType type of price ('last', 'bid' or 'ask')
+ * @param priceType type of price (either 'bid' or 'ask')
  * @param price of that token
  */
-function priceNotification(session, symbol, priceType, price) {
-    //sendMessage(session, 'Price Alert! ' + priceType + ' price of ' + symbol + ' is ' + price + '.');
+function priceNotification(username, symbol, priceType, price) {
+    IdService.getUser(username).then((result) => {
+        let session = new Session(bot, bot.client.store, bot.client.config, result.token_id, () => {
+            sendMessage(session, 'start', 'PRICE ALERT: ' + priceType + ' price of ' + symbol + ' is ' + price +
+                ' ETH.', false);
+            //TODO this throws the user back to step 'start' (Storage.loadBotSession() could be used to load the actual
+            // session instead of making up a new one)
+        });
+    });
 }
 
+/**
+ * sends a message to a user
+ * @param session to send message to
+ * @param step the user is currently on (needed to get message controls, see getMsgCtrls())
+ * @param message to send the user
+ * @param showKeyboard boolean which indicates whether keyboard should be shown or not
+ */
 function sendMessage(session, step, message, showKeyboard) {
     session.set('step', step);
     getMsgCtrls(step, (controls) => {
@@ -232,6 +292,11 @@ function sendMessage(session, step, message, showKeyboard) {
     });
 }
 
+/**
+ * sends a user all their set price alerts
+ * @param session to send the alerts to
+ * @param userAlerts collection of alerts to send
+ */
 function sendPriceAlerts(session, userAlerts) {
     for (let alert in userAlerts) {
         let humanIndex = +alert + 1; // start counting at 1 instead of 0
@@ -241,6 +306,11 @@ function sendPriceAlerts(session, userAlerts) {
     }
 }
 
+/**
+ * get message controls depending on the step the user is on
+ * @param step a user is on
+ * @param callback usually session.reply() to send a message with the according controls
+ */
 function getMsgCtrls(step, callback) {
     let controls = [];
     switch (step) {
@@ -296,9 +366,13 @@ function getMsgCtrls(step, callback) {
 
 // HELPERS:
 
-function getAlerts(session) {
-    let alerts = session.getGlobalAll();
-    delete alerts.address; // clean up to only have the alerts left
+/**
+ * gets alerts of all users
+ * @returns {Promise<*>} alerts of all users
+ */
+async function getAlerts() {
+    let alerts = await bot.client.store.loadBotSession('globals');
+    delete alerts.address; // clean up to only have the actual alerts left
     return alerts;
 }
 
