@@ -160,12 +160,12 @@ async function onMessage(session, message) {
             if (alertNo.match(/\d+/g) && userAlerts[alertNo - 1] !== undefined) {
                 userAlerts.splice(alertNo - 1, 1);
                 session.setGlobal(session.user.username, userAlerts);
-                if (userAlerts.length >= 0) {
+                if (userAlerts.length > 0) {
                     sendMessage(session, 'priceAlerts', 'Price alert ' + alertNo + ' deleted. Here\'s your new set of ' +
                         'price alerts:', false);
                     sendPriceAlerts(session, userAlerts);
                 } else {
-                    sendMessage(session, 'priceAlerts', 'Price alert ' + alertNo + ' deleted. No more alerts set', false);
+                    sendMessage(session, 'priceAlerts', 'Price alert ' + alertNo + ' deleted. No more alerts set.', false);
                 }
                 break;
             } else {

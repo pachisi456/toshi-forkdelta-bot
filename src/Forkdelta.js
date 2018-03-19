@@ -13,7 +13,7 @@ class Forkdelta {
         this.fetchTradeData();
         setInterval(() => {this.fetchTokenList()}, 8640000); // get list of traded tokens every 24 hours
         setInterval(() => {this.fetchTradeData()}, 300000); // get fork delta api data every 5 minutes
-        setInterval(() => {this.weeklyPriceCalls = 0}, 6.048e+8);
+        setInterval(() => {this.weeklyPriceCalls = 0}, 6.048e+8); // monitor price calls over the course of a week
     }
 
     /**
