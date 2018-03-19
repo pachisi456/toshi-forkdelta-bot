@@ -213,7 +213,7 @@ function onPayment(session, message) {
         // handle payments sent to the bot
         if (message.status == 'unconfirmed') {
             // payment has been sent to the ethereum network, but is not yet confirmed
-            sendMessage(session, session.get('step'), `Thanks for the payment! 🙏`, false);
+            sendMessage(session, session.get('step'), `Thanks a lot for your donation! 🙏`, false);
         } else if (message.status == 'confirmed') {
             // handle when the payment is actually confirmed!
         } else if (message.status == 'error') {
