@@ -9,6 +9,9 @@ with ForkDelta Bot to
 * look up prices of tokens traded on ForkDelta
 * set price alarms
 
+You can find the bot on the Toshi app under the username 
+@ForkDeltaBot.
+
 If you want to add a new feature feel free to make a pull request.
 I will happily review and accept it.
 
