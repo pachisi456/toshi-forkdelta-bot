@@ -69,14 +69,14 @@ function onCommand(session, command) {
             session.set('priceTypeToSetAlertFor', 'bid');
             symbol = session.get('tokenToSetAlertFor');
             sendMessage(session, 'setAlertPrice', 'Okay, so you want to set an alert for the bid price of ' + symbol + '. ' +
-                'Please provide a price in ETH. If the bid price on ForkDelta drops below this price I will ' +
+                'Please provide a price in ETH. If the bid price on ForkDelta rises above this price I will ' +
                 'let you know.', true);
             break;
         case 'ask':
             session.set('priceTypeToSetAlertFor', 'ask');
             symbol = session.get('tokenToSetAlertFor');
             sendMessage(session, 'setAlertPrice', 'Okay, so you want to set an alert for the ask price of ' + symbol + '. ' +
-                'Please provide a price in ETH. If the bid price on ForkDelta rises above this price I will ' +
+                'Please provide a price in ETH. If the ask price on ForkDelta falls below this price I will ' +
                 'let you know.', true);
             break;
         case 'info':
