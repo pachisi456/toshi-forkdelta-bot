@@ -14,7 +14,7 @@ let forkdelta = new Forkdelta();
 
 // ROUTING AND BOT LOGIC:
 
-bot.onEvent = function(session, message) {
+bot.onEvent = function (session, message) {
     switch (message.type) {
         case 'Init':
             welcome(session);
@@ -187,9 +187,9 @@ async function onMessage(session, message) {
                 let bidUSD = await convertEthToUSD(bid);
                 let askUSD = await convertEthToUSD(ask);
                 sendMessage(session, session.get('step'), 'Prices for ' + symbol + ':\n' +
-                    'last: ' + last + ' ETH ($' + lastUSD.toFixed(2) + ')\n' +
-                    'bid: ' + bid + ' ETH ($' + bidUSD.toFixed(2) + ')\n' +
-                    'ask: ' + ask + ' ETH ($' + askUSD.toFixed(2) + ')', false);
+                    'last: ' + last + ' ETH ($' + lastUSD + ')\n' +
+                    'bid: ' + bid + ' ETH ($' + bidUSD + ')\n' +
+                    'ask: ' + ask + ' ETH ($' + askUSD + ')', false);
                 forkdelta.weeklyPriceCalls++;
                 forkdelta.totalPriceCalls++;
             } else {
@@ -260,11 +260,12 @@ function welcome(session) {
  * @param priceType type of price (either 'bid' or 'ask')
  * @param price of that token
  */
-function priceNotification(username, symbol, priceType, price) {
+async function priceNotification(username, symbol, priceType, price) {
+    let usd = await convertEthToUSD(price);
     IdService.getUser(username).then((result) => {
         let session = new Session(bot, bot.client.store, bot.client.config, result.token_id, () => {
             sendMessage(session, 'start', 'PRICE ALERT: ' + priceType + ' price of ' + symbol + ' is ' + price +
-                ' ETH.', false);
+                ' ETH ($' + usd + ').', false);
             //TODO this throws the user back to step 'start' (Storage.loadBotSession() could be used to load the actual
             // session instead of making up a new one)
         });
@@ -290,21 +291,22 @@ function sendMessage(session, step, message, showKeyboard) {
 }
 
 /**
- * sends a user all their set price alerts
+ * Sends a user all their set price alerts.
  * @param session to send the alerts to
  * @param userAlerts collection of alerts to send
  */
-function sendPriceAlerts(session, userAlerts) {
+async function sendPriceAlerts(session, userAlerts) {
     for (let alert in userAlerts) {
         let humanIndex = +alert + 1; // start counting at 1 instead of 0
+        let usd = await convertEthToUSD(userAlerts[alert].price);
         sendMessage(session, 'priceAlerts', humanIndex + '. ' + userAlerts[alert].symbol + ': ' +
             userAlerts[alert].priceType + ' price alert set to ' +
-            userAlerts[alert].price + ' ETH.', false);
+            userAlerts[alert].price + ' ETH ($' + usd + ').', false);
     }
 }
 
 /**
- * get message controls depending on the step the user is on
+ * Get message controls depending on the step the user is on.
  * @param step a user is on
  * @param callback usually session.reply() to send a message with the according controls
  */
@@ -317,10 +319,10 @@ function getMsgCtrls(step, callback) {
                 {type: 'button', label: 'Price alerts', value: 'alerts'},
                 {
                     type: 'group', label: 'More', controls: [
-                        {type: 'button', label: 'Info', value: 'info'},
-                        {type: 'button', label: 'Contribute', value: 'contribute'},
-                        {type: 'button', label: 'Donate', value: 'donate'}
-                    ]
+                    {type: 'button', label: 'Info', value: 'info'},
+                    {type: 'button', label: 'Contribute', value: 'contribute'},
+                    {type: 'button', label: 'Donate', value: 'donate'}
+                ]
                 }
             ];
             break;
@@ -331,10 +333,10 @@ function getMsgCtrls(step, callback) {
                 {type: 'button', label: 'back', value: 'cancel'},
                 {
                     type: 'group', label: 'More', controls: [
-                        {type: 'button', label: 'Info', value: 'info'},
-                        {type: 'button', label: 'Contribute', value: 'contribute'},
-                        {type: 'button', label: 'Donate', value: 'donate'}
-                    ]
+                    {type: 'button', label: 'Info', value: 'info'},
+                    {type: 'button', label: 'Contribute', value: 'contribute'},
+                    {type: 'button', label: 'Donate', value: 'donate'}
+                ]
                 }
             ];
             break;
@@ -373,9 +375,15 @@ async function getAlerts() {
     return alerts;
 }
 
+/**
+ * convertEthToUSD converts and ether price to USD price.
+ * @param eth a price denominated in ether
+ * @returns {Promise.<TResult>} price denominated in USD and rounded to two decimal places.
+ */
 function convertEthToUSD(eth) {
     return Fiat.fetch().then((toEth) => {
         let rateUSD = toEth.USD(1);
-        return Promise.resolve(eth / rateUSD);
+        let usd = eth / rateUSD;
+        return Promise.resolve(usd.toFixed(2));
     });
 }
