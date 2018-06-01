@@ -264,7 +264,7 @@ async function priceNotification(username, symbol, priceType, price) {
     let usd = await convertEthToUSD(price);
     IdService.getUser(username).then((result) => {
         let session = new Session(bot, bot.client.store, bot.client.config, result.token_id, () => {
-            sendMessage(session, 'start', 'PRICE ALERT: ' + priceType + ' price of ' + symbol + ' is ' + price +
+            sendMessage(session, session.get('step'), 'PRICE ALERT: ' + priceType + ' price of ' + symbol + ' is ' + price +
                 ' ETH ($' + usd + ').', false);
             //TODO this throws the user back to step 'start' (Storage.loadBotSession() could be used to load the actual
             // session instead of making up a new one)
