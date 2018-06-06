@@ -131,6 +131,7 @@ async function onMessage(session, message) {
             // verify that user provided a valid price
             let priceArr = message.body.match(/\d+([.|,]\d+)?/g);
             let price = priceArr[0];
+            price = price.replace(',', '.');
             if (price != null) {
                 // create a new alert:
                 symbol = session.get('tokenToSetAlertFor');
