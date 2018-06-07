@@ -69,14 +69,17 @@ function onCommand(session, command) {
             session.set('priceTypeToSetAlertFor', 'bid');
             symbol = session.get('tokenToSetAlertFor');
             sendMessage(session, 'setAlertPrice', 'Okay, so you want to set an alert for the bid price of ' + symbol + '. ' +
-                'Please provide a price in ETH. If the bid price on ForkDelta rises above this price I will ' +
-                'let you know.', true);
+                'Please send me the alert price in either USD or ETH and specify the curreny. Here is an example:\n' +
+                '\'0.05 ETH\'\n' +
+                'If the bid price on ForkDelta rises above this price I will let you know.', true);
             break;
         case 'ask':
             session.set('priceTypeToSetAlertFor', 'ask');
             symbol = session.get('tokenToSetAlertFor');
             sendMessage(session, 'setAlertPrice', 'Okay, so you want to set an alert for the ask price of ' + symbol + '. ' +
-                'Please provide a price in ETH. If the ask price on ForkDelta falls below this price I will ' +
+                'Please send me the alert price in either USD or ETH and specify the curreny. Here is an example:\n' +
+                '\'0.05 ETH\'\n' +
+                'If the ask price on ForkDelta falls below this price I will ' +
                 'let you know.', true);
             break;
         case 'info':
@@ -128,11 +131,27 @@ async function onMessage(session, message) {
             }
             break;
         case 'setAlertPrice':
+            // verify the currency set by the user
+            let currency;
+            if (message.body.toLowerCase().endsWith('usd')) {
+                currency = 'USD';
+            } else if (message.body.toLowerCase().endsWith('eth')) {
+                currency = 'ETH';
+            } else {
+                sendMessage(session, 'setAlertPrice', 'Sorry, please provide a currency (either \'ETH\' or \'USD\').', true);
+                break;
+            }
             // verify that user provided a valid price
             let priceArr = message.body.match(/\d+([.|,]\d+)?/g);
             let price = priceArr[0];
             price = price.replace(',', '.');
             if (price != null) {
+                // convert price to eth if necessary
+                if (currency === 'USD') {
+                    let toEth = await Fiat.fetch();
+                    price = toEth.USD(price);
+                }
+
                 // create a new alert:
                 symbol = session.get('tokenToSetAlertFor');
                 handle = forkdelta.getTokenHandleBySymbol(symbol);
@@ -255,7 +274,7 @@ function welcome(session) {
 }
 
 /**
- * notify user about a price according to a set alert
+ * Notifies a user about a price according to a set alert.
  * @param username user to send message to
  * @param symbol of token (e.g. 'REP')
  * @param priceType type of price (either 'bid' or 'ask')
@@ -271,6 +290,21 @@ async function priceNotification(username, symbol, priceType, price) {
             // session instead of making up a new one)
         });
     });
+}
+
+/**
+ * Sends a user all their set price alerts.
+ * @param session to send the alerts to
+ * @param userAlerts collection of alerts to send
+ */
+async function sendPriceAlerts(session, userAlerts) {
+    for (let alert in userAlerts) {
+        let humanIndex = +alert + 1; // start counting at 1 instead of 0
+        let usd = await convertEthToUSD(userAlerts[alert].price);
+        sendMessage(session, 'priceAlerts', humanIndex + '. ' + userAlerts[alert].symbol + ': ' +
+            userAlerts[alert].priceType + ' price alert set to ' +
+            userAlerts[alert].price + ' ETH ($' + usd + ').', false);
+    }
 }
 
 /**
@@ -292,21 +326,6 @@ function sendMessage(session, step, message, showKeyboard) {
 }
 
 /**
- * Sends a user all their set price alerts.
- * @param session to send the alerts to
- * @param userAlerts collection of alerts to send
- */
-async function sendPriceAlerts(session, userAlerts) {
-    for (let alert in userAlerts) {
-        let humanIndex = +alert + 1; // start counting at 1 instead of 0
-        let usd = await convertEthToUSD(userAlerts[alert].price);
-        sendMessage(session, 'priceAlerts', humanIndex + '. ' + userAlerts[alert].symbol + ': ' +
-            userAlerts[alert].priceType + ' price alert set to ' +
-            userAlerts[alert].price + ' ETH ($' + usd + ').', false);
-    }
-}
-
-/**
  * Get message controls depending on the step the user is on.
  * @param step a user is on
  * @param callback usually session.reply() to send a message with the according controls
@@ -320,10 +339,10 @@ function getMsgCtrls(step, callback) {
                 {type: 'button', label: 'Price alerts', value: 'alerts'},
                 {
                     type: 'group', label: 'More', controls: [
-                    {type: 'button', label: 'Info', value: 'info'},
-                    {type: 'button', label: 'Contribute', value: 'contribute'},
-                    {type: 'button', label: 'Donate', value: 'donate'}
-                ]
+                        {type: 'button', label: 'Info', value: 'info'},
+                        {type: 'button', label: 'Contribute', value: 'contribute'},
+                        {type: 'button', label: 'Donate', value: 'donate'}
+                    ]
                 }
             ];
             break;
@@ -334,10 +353,10 @@ function getMsgCtrls(step, callback) {
                 {type: 'button', label: 'back', value: 'cancel'},
                 {
                     type: 'group', label: 'More', controls: [
-                    {type: 'button', label: 'Info', value: 'info'},
-                    {type: 'button', label: 'Contribute', value: 'contribute'},
-                    {type: 'button', label: 'Donate', value: 'donate'}
-                ]
+                        {type: 'button', label: 'Info', value: 'info'},
+                        {type: 'button', label: 'Contribute', value: 'contribute'},
+                        {type: 'button', label: 'Donate', value: 'donate'}
+                    ]
                 }
             ];
             break;
