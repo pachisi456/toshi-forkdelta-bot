@@ -17,11 +17,11 @@ class Forkdelta {
     }
 
     /**
-     * get list of traded tokens from https://forkdelta.github.io/config/main.json
+     * get list of traded tokens from https://forkdelta.app/config/main.json
      */
     fetchTokenList() {
         // get token list
-        fetch('https://forkdelta.github.io/config/main.json')
+        fetch('https://forkdelta.app/config/main.json')
             .then(response => {
                 response.json().then(json => {
                     this.tokens = new Map();
@@ -61,7 +61,7 @@ class Forkdelta {
 
     /**
      * get token handle traded on forkdelta by the human readable symbol
-     * see https://forkdelta.github.io/config/main.json for list of tokens
+     * see https://forkdelta.app/config/main.json for list of tokens
      * @param symbol human readable symbol of a token (e.g. 'REP')
      * @returns {string} tokenHandle traded on forkdelta
      */
