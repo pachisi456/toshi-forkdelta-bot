@@ -1,3 +1,5 @@
+Update: [Toshi is now Coinbase Wallet](https://blog.coinbase.com/goodbye-toshi-hello-coinbase-wallet-the-easiest-and-most-secure-crypto-wallet-and-browser-4ba6e52e4913) and focuses more on being a dapp browser and thus has dropped both chat and bot functionality. :(
+
 # Toshi ForkDelta Bot
 
 This is a bot for [Toshi](https://www.toshi.org/) that utilizes
